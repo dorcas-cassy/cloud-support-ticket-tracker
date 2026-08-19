@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Cloud Support Ticket Tracker</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <div>
+            <h1>Cloud Support Ticket Tracker</h1>
+            <p>Manage and resolve IT support requests</p>
+        </div>
+
+        <button id="new-ticket-button">+ New Ticket</button>
+    </header>
+
+    <main>
+        <section class="summary">
+            <div class="summary-card">
+                <h2 id="open-count">0</h2>
+                <p>Open Tickets</p>
+            </div>
+
+            <div class="summary-card">
+                <h2 id="progress-count">0</h2>
+                <p>In Progress</p>
+            </div>
+
+            <div class="summary-card">
+                <h2 id="resolved-count">0</h2>
+                <p>Resolved</p>
+            </div>
+        </section>
+
+        <section id="ticket-form-section" class="hidden">
+            <h2>Create a Support Ticket</h2>
+
+            <form id="ticket-form">
+                <label for="title">Issue title</label>
+                <input
+                    type="text"
+                    id="title"
+                    placeholder="Example: Cannot connect to Wi-Fi"
+                    required
+                >
+
+                <label for="requester">Requester’s name</label>
+                <input
+                    type="text"
+                    id="requester"
+                    placeholder="Enter the employee’s name"
+                    required
+                >
+
+                <label for="category">Category</label>
+                <select id="category">
+                    <option value="Network">Network</option>
+                    <option value="Account">Account</option>
+                    <option value="Software">Software</option>
+                    <option value="Hardware">Hardware</option>
+                </select>
+
+                <label for="priority">Priority</label>
+                <select id="priority">
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                </select>
+
+                <div class="form-buttons">
+                    <button type="button" id="cancel-button">
+                        Cancel
+                    </button>
+
+                    <button type="submit">
+                        Create Ticket
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <section class="ticket-section">
+            <div class="ticket-heading">
+                <div>
+                    <h2>Support Queue</h2>
+                    <p>Review and manage incoming support requests.</p>
+                </div>
+
+                <select id="status-filter">
+                    <option value="All">All tickets</option>
+                    <option value="Open">Open</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Resolved">Resolved</option>
+                </select>
+            </div>
+
+            <div id="ticket-list">
+                <p id="empty-message">
+                    No support tickets have been created.
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
