@@ -4,173 +4,118 @@ const ticketFormSection = document.getElementById("ticket-form-section");
 const ticketForm = document.getElementById("ticket-form");
 const ticketList = document.getElementById("ticket-list");
 const statusFilter = document.getElementById("status-filter");
-
+const message = document.getElementById("message");
 const openCount = document.getElementById("open-count");
 const progressCount = document.getElementById("progress-count");
 const resolvedCount = document.getElementById("resolved-count");
+let tickets = [];
 
-let tickets = [
-    {
-        id: 1001,
-        title: "Unable to connect to office Wi-Fi",
-        requester: "Maya Chen",
-        category: "Network",
-        priority: "High",
-        status: "Open"
-    },
-    {
-        id: 1002,
-        title: "Password reset for finance portal",
-        requester: "Jonas Weber",
-        category: "Account",
-        priority: "Medium",
-        status: "In Progress"
-    },
-    {
-        id: 1003,
-        title: "Microsoft Teams microphone not detected",
-        requester: "Amina Yusuf",
-        category: "Software",
-        priority: "Low",
-        status: "Resolved"
-    }
-];
+async function requestJson(url, options) {
+    const response = await fetch(url, options);
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error || "Request failed. Please try again.");
+    return body;
+}
 
-newTicketButton.addEventListener("click", function () {
+function showMessage(text) {
+    message.textContent = text;
+    message.classList.toggle("hidden", !text);
+}
+
+newTicketButton.addEventListener("click", () => {
     ticketFormSection.classList.remove("hidden");
+    document.getElementById("title").focus();
 });
-
-cancelButton.addEventListener("click", function () {
+cancelButton.addEventListener("click", () => {
     ticketFormSection.classList.add("hidden");
     ticketForm.reset();
 });
 
-ticketForm.addEventListener("submit", function (event) {
+ticketForm.addEventListener("submit", async event => {
     event.preventDefault();
-
-    const newTicket = {
-        id: Date.now(),
-        title: document.getElementById("title").value,
-        requester: document.getElementById("requester").value,
-        category: document.getElementById("category").value,
-        priority: document.getElementById("priority").value,
-        status: "Open"
-    };
-
-    tickets.unshift(newTicket);
-
-    ticketForm.reset();
-    ticketFormSection.classList.add("hidden");
-    statusFilter.value = "All";
-
-    displayTickets();
+    const submitButton = ticketForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    showMessage("");
+    try {
+        const ticket = await requestJson("/api/tickets", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title: document.getElementById("title").value,
+                requester: document.getElementById("requester").value,
+                category: document.getElementById("category").value,
+                priority: document.getElementById("priority").value
+            })
+        });
+        tickets.unshift(ticket);
+        ticketForm.reset();
+        ticketFormSection.classList.add("hidden");
+        statusFilter.value = "All";
+        displayTickets();
+    } catch (error) {
+        showMessage(error.message);
+    } finally {
+        submitButton.disabled = false;
+    }
 });
 
-statusFilter.addEventListener("change", function () {
-    displayTickets();
-});
+statusFilter.addEventListener("change", displayTickets);
 
-function updateTicketStatus(ticketId) {
-    const ticket = tickets.find(function (item) {
-        return item.id === ticketId;
-    });
-
-    if (ticket.status === "Open") {
-        ticket.status = "In Progress";
-    } else if (ticket.status === "In Progress") {
-        ticket.status = "Resolved";
+async function updateTicketStatus(ticket, button) {
+    button.disabled = true;
+    showMessage("");
+    try {
+        const updated = await requestJson(`/api/tickets/${ticket.id}/status`, { method: "PATCH" });
+        ticket.status = updated.status;
+        displayTickets();
+    } catch (error) {
+        showMessage(error.message);
+        button.disabled = false;
     }
-
-    displayTickets();
-}
-
-function getStatusClass(status) {
-    if (status === "Open") {
-        return "status-open";
-    }
-
-    if (status === "In Progress") {
-        return "status-progress";
-    }
-
-    return "status-resolved";
-}
-
-function updateSummary() {
-    openCount.textContent = tickets.filter(function (ticket) {
-        return ticket.status === "Open";
-    }).length;
-
-    progressCount.textContent = tickets.filter(function (ticket) {
-        return ticket.status === "In Progress";
-    }).length;
-
-    resolvedCount.textContent = tickets.filter(function (ticket) {
-        return ticket.status === "Resolved";
-    }).length;
 }
 
 function displayTickets() {
     const selectedStatus = statusFilter.value;
-
-    const filteredTickets = tickets.filter(function (ticket) {
-        return selectedStatus === "All" || ticket.status === selectedStatus;
-    });
-
-    ticketList.innerHTML = "";
-
+    const filteredTickets = tickets.filter(ticket => selectedStatus === "All" || ticket.status === selectedStatus);
+    ticketList.replaceChildren();
     if (filteredTickets.length === 0) {
-        ticketList.innerHTML = `
-            <p id="empty-message">
-                No support tickets found in this category.
-            </p>
-        `;
+        const empty = document.createElement("p");
+        empty.id = "empty-message";
+        empty.textContent = "No support tickets found in this category.";
+        ticketList.appendChild(empty);
     }
 
-    filteredTickets.forEach(function (ticket) {
-        const ticketElement = document.createElement("article");
-
-        ticketElement.classList.add("ticket");
-
-        let actionText = "Completed";
-
-        if (ticket.status === "Open") {
-            actionText = "Start Work";
-        } else if (ticket.status === "In Progress") {
-            actionText = "Resolve";
-        }
-
-        ticketElement.innerHTML = `
-            <div>
-                <h3>${ticket.title}</h3>
-
-                <p>
-                    Ticket #${ticket.id} · ${ticket.category}
-                    · Requested by ${ticket.requester}
-                </p>
-            </div>
-
-            <span class="status ${getStatusClass(ticket.status)}">
-                ${ticket.status}
-            </span>
-
-            <span class="priority">
-                ${ticket.priority}
-            </span>
-
-            <button
-                class="ticket-action"
-                ${ticket.status === "Resolved" ? "disabled" : ""}
-                onclick="updateTicketStatus(${ticket.id})"
-            >
-                ${actionText}
-            </button>
-        `;
-
-        ticketList.appendChild(ticketElement);
+    filteredTickets.forEach(ticket => {
+        const row = document.createElement("article");
+        row.className = "ticket";
+        const details = document.createElement("div");
+        const title = document.createElement("h3");
+        title.textContent = ticket.title;
+        const meta = document.createElement("p");
+        meta.textContent = `Ticket #${ticket.id} · ${ticket.category} · Requested by ${ticket.requester}`;
+        details.append(title, meta);
+        const status = document.createElement("span");
+        status.className = `status ${ticket.status === "Open" ? "status-open" : ticket.status === "In Progress" ? "status-progress" : "status-resolved"}`;
+        status.textContent = ticket.status;
+        const priority = document.createElement("span");
+        priority.className = "priority";
+        priority.textContent = ticket.priority;
+        const action = document.createElement("button");
+        action.className = "ticket-action";
+        action.textContent = ticket.status === "Open" ? "Start Work" : ticket.status === "In Progress" ? "Resolve" : "Completed";
+        action.disabled = ticket.status === "Resolved";
+        action.addEventListener("click", () => updateTicketStatus(ticket, action));
+        row.append(details, status, priority, action);
+        ticketList.appendChild(row);
     });
-
-    updateSummary();
+    openCount.textContent = tickets.filter(ticket => ticket.status === "Open").length;
+    progressCount.textContent = tickets.filter(ticket => ticket.status === "In Progress").length;
+    resolvedCount.textContent = tickets.filter(ticket => ticket.status === "Resolved").length;
 }
 
-displayTickets();
+requestJson("/api/tickets")
+    .then(data => { tickets = data; displayTickets(); })
+    .catch(error => {
+        ticketList.textContent = "Unable to load tickets.";
+        showMessage(`Could not load tickets: ${error.message}`);
+    });
