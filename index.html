@@ -21,6 +21,7 @@
     </header>
 
     <main>
+        <p id="message" class="message hidden" role="alert"></p>
         <section class="summary">
             <div class="summary-card">
                 <h2 id="open-count">0</h2>
@@ -47,6 +48,7 @@
                     type="text"
                     id="title"
                     placeholder="Example: Cannot connect to Wi-Fi"
+                    maxlength="120"
                     required
                 >
 
@@ -55,6 +57,7 @@
                     type="text"
                     id="requester"
                     placeholder="Enter the employee’s name"
+                    maxlength="80"
                     required
                 >
 
@@ -92,7 +95,7 @@
                     <p>Review and manage incoming support requests.</p>
                 </div>
 
-                <select id="status-filter">
+                <select id="status-filter" aria-label="Filter tickets by status">
                     <option value="All">All tickets</option>
                     <option value="Open">Open</option>
                     <option value="In Progress">In Progress</option>
@@ -102,7 +105,7 @@
 
             <div id="ticket-list">
                 <p id="empty-message">
-                    No support tickets have been created.
+                    Loading tickets…
                 </p>
             </div>
         </section>

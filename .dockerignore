@@ -1,0 +1,9 @@
+.git
+.gitignore
+node_modules
+data
+screenshots
+README.md
+server.test.js
+*.log
+.env

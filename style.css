@@ -52,6 +52,22 @@ main {
     padding: 0 20px;
 }
 
+.message {
+    background-color: #fee8e3;
+    border: 1px solid #eab8ac;
+    border-radius: 7px;
+    color: #8d3023;
+    margin-bottom: 20px;
+    padding: 12px 16px;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 3px solid #0c8a6b;
+    outline-offset: 2px;
+}
+
 .summary {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
